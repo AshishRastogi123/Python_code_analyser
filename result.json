@@ -1,0 +1,42 @@
+{
+  "functions": [
+    {
+      "name": "load_data",
+      "line": 1
+    },
+    {
+      "name": "hello",
+      "line": 3
+    },
+    {
+      "name": "process_data",
+      "line": 9
+    },
+    {
+      "name": "run",
+      "line": 13
+    },
+    {
+      "name": "add",
+      "line": 15
+    }
+  ],
+  "classes": [
+    {
+      "name": "Analyzer",
+      "line": 12
+    }
+  ],
+  "imports": [],
+  "relationships": {
+    "hello": [
+      "print"
+    ],
+    "process_data": [
+      "load_data"
+    ],
+    "run": [
+      "process_data"
+    ]
+  }
+}
