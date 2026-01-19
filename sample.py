@@ -4,6 +4,8 @@ def hello():
     print("Hello")
 
 hello()
+def hi():
+    return "hello ashish"
 
 
 def process_data():

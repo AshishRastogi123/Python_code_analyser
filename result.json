@@ -11,25 +11,30 @@
       "docstring": ""
     },
     {
+      "name": "hi",
+      "line": 7,
+      "docstring": ""
+    },
+    {
       "name": "process_data",
-      "line": 9,
+      "line": 11,
       "docstring": ""
     },
     {
       "name": "run",
-      "line": 13,
+      "line": 15,
       "docstring": ""
     },
     {
       "name": "add",
-      "line": 15,
+      "line": 17,
       "docstring": ""
     }
   ],
   "classes": [
     {
       "name": "Analyzer",
-      "line": 12,
+      "line": 14,
       "docstring": ""
     }
   ],
