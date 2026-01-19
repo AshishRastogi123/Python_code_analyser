@@ -6,12 +6,15 @@ def save_json(data, filename="output/result.json"):
     """
     Saves analysis result to a JSON file
     """
-    os.makedirs(os.path.dirname(filename), exist_ok=True)
+    # Create directory if needed, but only if filename has a directory component
+    dir_path = os.path.dirname(filename)
+    if dir_path:
+        os.makedirs(dir_path, exist_ok=True)
 
     with open(filename, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2)
 
-    print(f"📁 Output saved to {filename}")
+    print(f"✓ Output saved to {filename}")
 
 
 def print_summary(data):

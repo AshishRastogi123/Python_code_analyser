@@ -94,23 +94,18 @@ def query_codebase(query):
 
 def main():
     parser = argparse.ArgumentParser(description="Python Code Analyzer with RAG")
-    subparsers = parser.add_subparsers(dest="command", help="Available commands")
-
-    # Analyze subcommand
-    subparsers.add_parser("analyze", help="Analyze a Python file").add_argument("file", help="Path to Python file")
-
-    # Index subcommand
-    subparsers.add_parser("index", help="Index a Python file for RAG").add_argument("file", help="Path to Python file")
-
-    # Query subcommand
-    subparsers.add_parser("query", help="Query the indexed codebase").add_argument("query", help="Query string")
+    parser.add_argument("file", nargs="?", help="Path to Python file (default: analyze mode)")
+    parser.add_argument("--command", choices=["analyze", "index", "query"], help="Command to run")
+    parser.add_argument("--query", help="Query string for query command")
 
     args = parser.parse_args()
 
-    # If no subcommand is provided but a file argument is given, default to "analyze"
-    if args.command is None and len(sys.argv) > 1:
+    # Default behavior: if only a file is provided, analyze it
+    if args.file and not args.command:
         args.command = "analyze"
-        args.file = sys.argv[1]
+    elif not args.file and not args.command:
+        parser.print_help()
+        return
 
     if args.command == "analyze":
         print("=" * 60)

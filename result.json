@@ -2,29 +2,35 @@
   "functions": [
     {
       "name": "load_data",
-      "line": 1
+      "line": 1,
+      "docstring": ""
     },
     {
       "name": "hello",
-      "line": 3
+      "line": 3,
+      "docstring": ""
     },
     {
       "name": "process_data",
-      "line": 9
+      "line": 9,
+      "docstring": ""
     },
     {
       "name": "run",
-      "line": 13
+      "line": 13,
+      "docstring": ""
     },
     {
       "name": "add",
-      "line": 15
+      "line": 15,
+      "docstring": ""
     }
   ],
   "classes": [
     {
       "name": "Analyzer",
-      "line": 12
+      "line": 12,
+      "docstring": ""
     }
   ],
   "imports": [],

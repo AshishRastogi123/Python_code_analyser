@@ -1,40 +1,77 @@
-# Python Code Analyser 
+# Python Code Analyser with RAG
 
-A small utility that parses Python source files to extract functions, classes, imports, and function-call relationships using the AST module. The analyzer saves a structured JSON report to `output/result.json` and prints a friendly terminal summary.
+A powerful utility that parses Python source files to extract functions, classes, imports, and function-call relationships using the AST module. It also provides Retrieval-Augmented Generation (RAG) capabilities with FAISS indexing and semantic search for intelligent code querying.
 
 ---
 
 ## 🔧 Features
 
-- Extracts function and class definitions with line numbers
-- Collects imports used in the file
-- Detects relationships (which functions call which other functions)
-- Saves results to `result.json` and prints a readable summary
+- **Code Analysis**: Extracts function and class definitions with line numbers
+- **Relationship Detection**: Identifies which functions call which other functions
+- **Import Tracking**: Collects all imports used in the file
+- **Semantic Embeddings**: Generates embeddings for code chunks using Sentence Transformers
+- **FAISS Indexing**: Creates a fast similarity search index for code retrieval
+- **RAG Pipeline**: Query your codebase using natural language and get relevant code snippets
+- **Detailed Progress Tracking**: Console messages showing which steps work properly
+- **JSON Reports**: Saves structured analysis results to JSON files
 
+---
 
-##  Requirements
+## 📋 Requirements
 
 - Python 3.10+ (tested on Python 3.14)
+- Dependencies: `sentence-transformers`, `huggingface-hub`, `faiss-cpu`, `numpy`
 
-No third-party packages are required — the project relies on the Python standard library.
+Install dependencies:
+```bash
+pip install -r requirements.txt
+```
 
+---
 
-##  Usage
+## 🚀 Usage
 
-Run the analyzer against a Python file:
+### 1. Analyze a Python File (Default)
+
+Simply pass a Python file to analyze it:
 
 ```bash
 python analyzer.py sample.py
 ```
 
 This will:
+- Display detailed progress messages for each analysis step
+- Extract functions, classes, imports, and relationships
 - Save the JSON report to `result.json`
 - Print a human-friendly summary to the console
 
+### 2. Index a File for RAG
 
-##  Output format
+Build a semantic search index for intelligent querying:
 
-The JSON output (`result.json`) follows this shape:
+```bash
+python analyzer.py --command index --file sample.py
+```
+
+This will:
+- Analyze the file
+- Convert code into chunks
+- Generate embeddings for each chunk
+- Build and save a FAISS index
+
+### 3. Query the Indexed Codebase
+
+Search your indexed code using natural language:
+
+```bash
+python analyzer.py --command query --query "what functions handle data processing"
+```
+
+---
+
+## 📊 Output Format
+
+The JSON output (`result.json`) follows this structure:
 
 ```json
 {
@@ -55,22 +92,49 @@ The JSON output (`result.json`) follows this shape:
 }
 ```
 
+---
+
+## 📁 Project Structure
+
+```
+Python_code_analyser/
+├── analyzer.py           # Main entry point
+├── extractor.py          # AST-based entity extraction
+├── relationships.py      # Function call relationship detection
+├── output.py             # JSON output and terminal display
+├── rag/
+│   ├── chunker.py        # Code chunking for embeddings
+│   ├── embeddings.py     # Embedding generation
+│   ├── faiss_index.py    # FAISS index creation and management
+│   ├── llm_interface.py  # LLM integration
+│   ├── pipeline.py       # RAG pipeline orchestration
+│   └── retriever.py      # Semantic retrieval from FAISS
+├── requirements.txt      # Python dependencies
+└── README.md            # This file
+```
+
+---
 
 ## 🤝 Contributing
 
 Contributions are welcome! Typical improvements:
-- Add unit tests for `extractor`, `relationships`, and `output`
-- Add CLI flags (output path, multiple input files)
-- Add support for package/dir scanning
+- Add unit tests for all modules
+- Add CLI flags for custom output paths
+- Add support for batch file/directory scanning
+- Enhance RAG with more sophisticated chunking strategies
+- Add support for multi-file analysis with cross-file relationships
 
 Please open an issue or submit a pull request.
 
+---
 
-## 💡 Next steps
+## 💡 Next Steps
 
-- Add linters and tests to CI
-- Expand analysis to include class/attribute relationships and imports usage
-
+- Add linters and tests to CI/CD pipeline
+- Expand analysis to include class methods and attributes
+- Support for tracking import usage
+- Add visualization of code relationships
+- Implement caching for FAISS indexes
 
 ---
 
