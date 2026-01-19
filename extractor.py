@@ -8,16 +8,20 @@ class CodeExtractor(ast.NodeVisitor):
         self.imports = []
 
     def visit_FunctionDef(self, node):
+        docstring = ast.get_docstring(node) or ""
         self.functions.append({
             "name": node.name,
-            "line": node.lineno
+            "line": node.lineno,
+            "docstring": docstring
         })
         self.generic_visit(node)
 
     def visit_ClassDef(self, node):
+        docstring = ast.get_docstring(node) or ""
         self.classes.append({
             "name": node.name,
-            "line": node.lineno
+            "line": node.lineno,
+            "docstring": docstring
         })
         self.generic_visit(node)
 
