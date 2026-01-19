@@ -13,4 +13,4 @@ class Analyzer:
     def run(self):
         process_data()
 def add(a,b):
-    pass
+    return a+b

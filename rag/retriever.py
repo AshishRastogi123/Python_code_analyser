@@ -3,6 +3,7 @@ Retriever module for fetching relevant chunks based on query.
 """
 
 import numpy as np
+import faiss
 from .embeddings import generate_embeddings, load_model
 from .faiss_index import load_index
 

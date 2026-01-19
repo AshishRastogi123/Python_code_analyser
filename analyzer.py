@@ -21,22 +21,32 @@ def analyze_file(file_path):
       - imports: list of import strings
       - relationships: dict mapping function name -> [callees]
     """
+    print(f"\n✓ Starting analysis of file: {file_path}")
     try:
+        print(f"  → Reading file...")
         with open(file_path, "r", encoding="utf-8") as f:
             code = f.read()
+        print(f"  ✓ File read successfully")
 
+        print(f"  → Parsing AST...")
         tree = ast.parse(code)
+        print(f"  ✓ AST parsing successful")
 
     except FileNotFoundError:
-        print(f"File not found: {file_path}")
+        print(f"✗ File not found: {file_path}")
         sys.exit(1)
 
     except SyntaxError as e:
-        print(" Syntax error in file:", e)
+        print(f"✗ Syntax error in file: {e}")
         sys.exit(1)
 
+    print(f"  → Extracting entities...")
     entities = extract_entities(tree)
+    print(f"  ✓ Entities extracted: {len(entities.get('functions', []))} functions, {len(entities.get('classes', []))} classes")
+
+    print(f"  → Extracting relationships...")
     rels = extract_relationships(tree)
+    print(f"  ✓ Relationships extracted: {len(rels)} relationships found")
 
     result = {
         "functions": entities.get("functions", []),
@@ -50,17 +60,37 @@ def analyze_file(file_path):
 
 def index_file(file_path):
     """Index a file for RAG: analyze, chunk, embed, and save to FAISS."""
+    print(f"\n✓ Starting indexing of file: {file_path}")
+    
+    print(f"  → Step 1: Analyzing file...")
     result = analyze_file(file_path)
+    print(f"  ✓ Analysis complete")
+    
+    print(f"  → Step 2: Creating chunks...")
     chunks = create_chunks(result)
+    print(f"  ✓ Created {len(chunks)} chunks")
+    
+    print(f"  → Step 3: Loading embedding model...")
     model = load_model()
+    print(f"  ✓ Model loaded successfully")
+    
+    print(f"  → Step 4: Generating embeddings...")
     embeddings = generate_embeddings(chunks, model)
+    print(f"  ✓ Generated embeddings for {len(embeddings)} chunks")
+    
+    print(f"  → Step 5: Building FAISS index...")
     build_and_save_index(chunks, embeddings)
-    print(f"Indexed {len(chunks)} chunks for {file_path}")
+    print(f"  ✓ FAISS index built and saved")
+    
+    print(f"\n✓ Indexing complete! Indexed {len(chunks)} chunks for {file_path}")
 
 def query_codebase(query):
     """Query the indexed codebase using RAG."""
+    print(f"\n✓ Starting query: '{query}'")
+    print(f"  → Retrieving relevant context...")
     answer = rag_query(query)
-    print(f"Query: {query}\nAnswer: {answer}")
+    print(f"  ✓ Query processed")
+    print(f"\nQuery: {query}\nAnswer: {answer}")
 
 def main():
     parser = argparse.ArgumentParser(description="Python Code Analyzer with RAG")
@@ -77,12 +107,27 @@ def main():
 
     args = parser.parse_args()
 
+    # If no subcommand is provided but a file argument is given, default to "analyze"
+    if args.command is None and len(sys.argv) > 1:
+        args.command = "analyze"
+        args.file = sys.argv[1]
+
     if args.command == "analyze":
+        print("=" * 60)
+        print("PYTHON CODE ANALYSIS REPORT")
+        print("=" * 60)
         result = analyze_file(args.file)
         save_json(result, filename="result.json")
-        print("\nAnalysis complete!\n")
+        print("\n✓ Analysis complete!")
+        print("\n" + "=" * 60)
+        print("DETAILED ANALYSIS OUTPUT")
+        print("=" * 60)
         print(json.dumps(result, indent=2))
+        print("\n" + "=" * 60)
+        print("ANALYSIS SUMMARY")
+        print("=" * 60)
         print_summary(result)
+        print("=" * 60)
     elif args.command == "index":
         index_file(args.file)
     elif args.command == "query":
