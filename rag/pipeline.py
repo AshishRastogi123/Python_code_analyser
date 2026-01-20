@@ -27,3 +27,8 @@ def rag_query(query, top_k=5, llm=None):
     # Generate answer
     answer = llm.generate_answer(query, context)
     return answer
+
+# Alias for convenience
+def run_query(query, top_k=5, llm=None):
+    """Alias for rag_query."""
+    return rag_query(query, top_k=top_k, llm=llm)
