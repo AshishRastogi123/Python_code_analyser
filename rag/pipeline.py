@@ -81,7 +81,7 @@ def _get_default_llm():
     try:
         if provider == "groq":
             logger.debug("Initializing GroqLLM")
-            return GroqLLM(model="mixtral-8x7b-32768")
+            return GroqLLM()
         elif provider == "ollama":
             model = Config.embedding_model()  # Can extend for separate LLM_MODEL later
             logger.debug(f"Initializing OllamaLLM with model: llama3")

@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 """Groq Integration Verification Script"""
 
+from dotenv import load_dotenv
+from pathlib import Path
+load_dotenv(Path(__file__).resolve().parent / ".env")
+
 from rag.llm_interface import GroqLLM, OllamaLLM, DummyLLM
 from rag.pipeline import rag_query, _get_default_llm
 from utils.config import Config

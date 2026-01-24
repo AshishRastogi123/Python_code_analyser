@@ -19,6 +19,7 @@ import sys
 import os
 from typing import Optional
 from utils.logger import get_logger
+from utils.config import Config
 
 logger = get_logger(__name__)
 
@@ -69,19 +70,21 @@ Your task:
 
 Format your response clearly with headers and bullet points when appropriate."""
 
-    def __init__(self, model: str = "mixtral-8x7b-32768", api_key: Optional[str] = None):
+    def __init__(self, model: Optional[str] = None, api_key: Optional[str] = None):
+
         """
         Initialize Groq LLM interface.
         
         Args:
-            model (str): Groq model name (e.g., 'llama3-70b-8192', 'mixtral-8x7b-32768')
+            Model: llama-3.1-8b-instant (default, configurable via GROQ_MODEL)
             api_key (str): Groq API key. If None, reads from GROQ_API_KEY env var
         
         Raises:
             RuntimeError: If API key is not provided or invalid
         """
-        self.model = model
-        self.api_key = api_key or os.getenv("GROQ_API_KEY")
+        self.model = model or Config.groq_model()
+        self.api_key = api_key or Config.groq_api_key()
+
         
         if not self.api_key:
             logger.error("GROQ_API_KEY not set in environment")

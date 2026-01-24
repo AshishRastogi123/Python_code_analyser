@@ -10,6 +10,9 @@ Architecture:
 - rag.*: Semantic search and retrieval
 - output: Legacy compatibility wrapper
 """
+from dotenv import load_dotenv
+from pathlib import Path
+load_dotenv(Path(__file__).resolve().parent / ".env")
 
 import json
 import sys
