@@ -1,264 +1,192 @@
-# Python Code Analyser with RAG
+# Legacy Code Modernization Platform
 
-A powerful utility that parses Python source files to extract functions, classes, imports, and function-call relationships using the AST module. It also provides Retrieval-Augmented Generation (RAG) capabilities with FAISS indexing and semantic search for intelligent code querying.
+A powerful, enterprise-grade Python tool for analyzing and understanding legacy codebases. Combines AST-based code analysis with Retrieval-Augmented Generation (RAG) to provide intelligent code insights.
+
+**Current Status**: Phase 1 ✅ (Core Architecture) | Phase 2+ 🚀 (AI Analysis & FastAPI)
 
 ---
 
-## � Project Overview
+## 🎯 Project Overview
 
 ### Purpose
-This project solves the problem of **understanding and querying large Python codebases**. Instead of manually reading through code files, you can:
-- Automatically extract code structure (functions, classes, imports)
-- Identify function call relationships and dependencies
-- Build a semantic search index for natural language queries
-- Query the codebase using plain English questions
+This project helps teams **understand, document, and modernize legacy Python codebases**. Instead of manually reading through thousands of lines of code, you can:
+- Extract comprehensive code structure (functions, classes, imports, methods)
+- Identify function call relationships and architectural dependencies
+- Build semantic search indices for intelligent querying
+- Query codebases using natural language questions
+- Generate AI-powered refactoring and modernization suggestions
 
 ### Problem Solved
-When working with unfamiliar or large Python codebases, developers face challenges:
-- Understanding the overall structure and architecture
-- Tracking which functions call which other functions
-- Finding specific code components quickly
-- Documenting relationships between code entities
+When working with unfamiliar or large legacy Python codebases, development teams face:
+- **Architectural Blindness**: Not understanding the overall system design
+- **Hidden Dependencies**: Circular imports, tight coupling, monolithic structures
+- **Refactoring Risk**: Can't safely extract services without breaking everything
+- **Knowledge Loss**: Code understanding locked in team members' heads
+- **Modernization Barriers**: Can't migrate to microservices without understanding architecture
 
-This tool automates these tasks using **AST analysis** and **RAG (Retrieval-Augmented Generation)**.
-
----
-
-## 🔧 Features
-
-- **Code Analysis**: Extracts function and class definitions with line numbers and docstrings
-- **Relationship Detection**: Identifies which functions call which other functions
-- **Import Tracking**: Collects all imports used in the file
-- **Semantic Embeddings**: Generates embeddings for code chunks using Sentence Transformers
-- **FAISS Indexing**: Creates a fast similarity search index for code retrieval
-- **RAG Pipeline**: Query your codebase using natural language and get relevant code snippets
-- **Detailed Progress Tracking**: Console messages showing which steps work properly
-- **JSON Reports**: Saves structured analysis results to JSON files
-- **Web UI**: Interactive Streamlit interface for querying your indexed codebase
+This tool automates architectural analysis using **AST-based code extraction** and **Retrieval-Augmented Generation (RAG)**.
 
 ---
 
-## 🏗️ Project Architecture
+## ✨ Features
+
+### Current (Phase 1 ✅)
+- **Code Analysis**: Extracts functions, classes, methods, imports with metadata
+- **AST-Based Parsing**: Accurate syntax tree analysis (no regex hacks)
+- **Relationship Detection**: Identifies function calls, inheritance, imports
+- **Structured Logging**: Context-aware logging throughout the stack
+- **Configuration Management**: Environment-based configuration with .env support
+- **Clean Architecture**: Layered, testable, extensible codebase
+- **RAG Pipeline**: Query codebase using natural language
+- **FAISS Indexing**: Fast semantic search for code discovery
+- **JSON Reports**: Structured analysis results for programmatic access
+- **Web UI**: Streamlit dashboard for interactive querying
+
+### Coming Soon (Phase 2+)
+- **Coupling Analysis**: Detect tightly-coupled modules
+- **Refactoring Suggestions**: AI-powered modernization recommendations
+- **Service Extraction**: Monolith → microservices recommendations
+- **Architecture Explanations**: Human-friendly system architecture explanations
+- **FastAPI Backend**: REST API for integration with external tools
+- **Dependency Graphs**: Visualize code dependencies and architecture
+- **Multi-file Analysis**: Cross-file relationships and impact analysis
+
+---
+
+## 🏗️ Architecture (Phase 1)
+
+The codebase follows **clean architecture** principles with clear separation of concerns:
+
+```
+CLI Layer (analyzer.py)
+    ↓ delegates to
+Core Analysis (core/*.py)
+    ├─ ast_parser.py: AST-based code extraction
+    ├─ models.py: Type-safe data models
+    ↓ uses
+Utilities (utils/*.py)
+    ├─ logger.py: Structured logging
+    ├─ config.py: Configuration management
+    ↓ integrates with
+RAG Pipeline (rag/*.py)
+    └─ embeddings, faiss, retrieval
+```
 
 ### Core Modules
 
-#### **analyzer.py** (Entry Point)
-Main module that orchestrates the entire workflow:
-- `analyze_file()`: Parses a Python file using AST, extracts entities and relationships
-- `index_file()`: Builds a complete semantic search index for a file
-- `query_codebase()`: Queries the indexed codebase using RAG
-- CLI interface with commands: `analyze`, `index`, `query`
+#### **core/ast_parser.py** (AST Analysis)
+Extracts code structure using Python's AST module:
+- `SafeParser`: Safe entry point with error handling
+- `EntityExtractor`: Finds functions, classes, methods, imports
+- `RelationshipExtractor`: Detects calls, inheritance, imports
+- Produces type-safe `FileAnalysis` objects
 
-#### **extractor.py** (Code Extraction)
-`CodeExtractor` class (AST visitor) that extracts:
-- **Functions**: Name, line number, docstring
-- **Classes**: Name, line number, docstring
-- **Imports**: Both `import x` and `from x import y` statements
+#### **core/models.py** (Data Models)
+Immutable dataclasses representing code entities:
+- `Entity`: Base class for all code components
+- `Function`: Function/method with metadata
+- `Class`: Class with methods and inheritance
+- `Import`: Import statement tracking
+- `Location`: File location (file, line, column)
+- `Relationship`: Entity-to-entity relationships
+- `FileAnalysis`: Results from single file analysis
+- `ProjectAnalysis`: Project-wide analysis results
 
-#### **relationships.py** (Dependency Analysis)
-`RelationshipAnalyzer` class that maps function call relationships:
-- Tracks which function is currently being analyzed
-- Records direct function calls: `foo()`
-- Records method calls: `obj.foo()`
-- Returns a dictionary: `{function_name: [callees]}`
+#### **utils/logger.py** (Structured Logging)
+Context-aware logging throughout the stack:
+- `Logger`: Singleton logger with context injection
+- `StructuredFormatter`: Log formatter with context metadata
+- `get_logger(name)`: Module-level logger convenience function
+- Temporary context management via context manager
 
-#### **output.py** (Reporting)
-Handles results presentation:
-- `save_json()`: Saves analysis to JSON file
-- `print_summary()`: Displays human-readable analysis summary with function calls and class definitions
+#### **utils/config.py** (Configuration Management)
+Environment-based configuration without hardcoding:
+- `Config`: Static configuration class
+- Supports environment variables, .env file, and defaults
+- Grouped settings: Logging, RAG, Analysis, LLM, API
+- Validation and diagnostic methods
 
-### RAG Subsystem (rag/ directory)
+#### **analyzer.py** (CLI Entry Point - Refactored)
+Command-line interface delegating to core modules:
+- `analyze_file()`: Uses SafeParser for analysis
+- `index_file()`: Builds FAISS index for RAG
+- `query_codebase()`: Queries indexed codebase
+- `_convert_to_legacy_format()`: Backward compatibility layer
 
-#### **chunker.py** (Text Chunking)
-Converts analysis results into queryable text chunks:
-- Creates chunks for imports
-- Creates chunks for each function (including its callees)
-- Creates chunks for each class
+#### **rag/*** (Unchanged - RAG Subsystem)
+Retrieval-Augmented Generation pipeline:
+- `chunker.py`: Converts analysis to queryable chunks
+- `embeddings.py`: Generates semantic embeddings
+- `faiss_index.py`: FAISS index management
+- `retriever.py`: Semantic similarity search
+- `llm_interface.py`: Answer generation
+- `pipeline.py`: RAG orchestration
 
-#### **embeddings.py** (Semantic Embeddings)
-Generates vector embeddings for code chunks:
-- Uses Sentence Transformers (`sentence-transformers` library)
-- Converts text chunks into dense vector representations
-- Enables semantic similarity search
+### Supporting Modules
 
-#### **faiss_index.py** (Vector Index)
-Manages FAISS (Facebook AI Similarity Search) index:
-- `build_and_save_index()`: Creates normalized FAISS index and persists to disk
-- `load_index()`: Loads pre-built index from disk
-- Stores both embeddings (index.faiss) and chunks metadata (chunks.pkl)
+#### **extractor.py** (Backward Compatibility)
+Legacy module - now wraps core/ast_parser
 
-#### **retriever.py** (Similarity Search)
-Retrieves relevant code chunks based on query:
-- Loads FAISS index and chunks
-- Converts query to embeddings
-- Returns top-k most similar chunks using cosine similarity
+#### **relationships.py** (Backward Compatibility)
+Legacy module - now wrapped by core/ast_parser
 
-#### **llm_interface.py** (Answer Generation)
-Generates final answer from retrieved context:
-- `DummyLLM`: Default LLM interface (can be extended for real LLMs)
-- Takes query and retrieved context as input
-- Generates comprehensive answers
-
-#### **pipeline.py** (RAG Orchestration)
-Combines retrieval and generation:
-- `rag_query()`: Main RAG function combining retrieval + generation
-- `run_query()`: Convenient alias for `rag_query()`
-
-### UI Subsystem (ui/ directory)
-
-#### **app.py** (Streamlit Web Interface)
-Interactive web application for code analysis:
-- Checks if FAISS index exists
-- Provides guided setup instructions
-- Accepts natural language questions
-- Displays results with search confirmation
+#### **output.py** (Backward Compatibility)
+JSON saving and console display - unchanged
 
 ---
 
-## 📋 Requirements
-
-- Python 3.10+ (tested on Python 3.14)
-- Dependencies: `sentence-transformers`, `huggingface-hub`, `faiss-cpu`, `numpy`, `streamlit`
-
-Install dependencies:
-```bash
-pip install -r requirements.txt
-```
-
----
-
-## 🚀 Usage
-
-### 1. Analyze a Python File (Default)
-
-Simply pass a Python file to analyze it:
-
-```bash
-python analyzer.py sample.py
-```
-
-This will:
-- Display detailed progress messages for each analysis step
-- Extract functions, classes, imports, and relationships
-- Save the JSON report to `result.json`
-- Print a human-friendly summary to the console
-
-### 2. Index a File for RAG
-
-Build a semantic search index for intelligent querying:
-
-```bash
-python analyzer.py sample.py --command index
-```
-
-This will:
-- Analyze the file
-- Convert code into chunks
-- Generate embeddings for each chunk using Sentence Transformers
-- Build and save a FAISS index (index.faiss) and chunks metadata (chunks.pkl)
-
-### 3. Query the Indexed Codebase (CLI)
-
-Search your indexed code using natural language:
-
-```bash
-python analyzer.py --command query --query "what functions handle data processing"
-```
-
-**Workflow:**
-1. Converts your query into embeddings
-2. Searches FAISS index for top-k similar code chunks
-3. Retrieves matching functions/classes/imports
-4. Generates a comprehensive answer
-
-### 4. Use the Web Interface (Streamlit)
-
-Launch an interactive web UI for querying:
-
-```bash
-streamlit run ui/app.py
-```
-
-**Features:**
-- ✓ User-friendly interface for natural language queries
-- ✓ Automatic FAISS index detection
-- ✓ Step-by-step setup guidance
-- ✓ Real-time query results
-
----
-
-## 🔄 Workflow Example
-
-```bash
-# Step 1: Index your Python file
-python analyzer.py sample.py --command index
-# Output: Created embeddings and FAISS index
-
-# Step 2a: Query via CLI
-python analyzer.py --command query --query "What does the main function do?"
-
-# Step 2b: Or use the Web UI
-streamlit run ui/app.py
-# Open browser and ask questions interactively
-```
-
----
-
-## 📊 Output Format
-
-### JSON Report (result.json)
-The analysis output follows this structure:
-
-```json
-{
-  "functions": [
-    { "name": "load_data", "line": 1, "docstring": "Loads data..." },
-    { "name": "process_data", "line": 10, "docstring": "Processes..." }
-  ],
-  "classes": [
-    { "name": "DataAnalyzer", "line": 20, "docstring": "Main analyzer..." }
-  ],
-  "imports": [
-    "os", "sys", "pandas.DataFrame"
-  ],
-  "relationships": {
-    "process_data": ["load_data", "validate"],
-    "main": ["process_data", "output_results"]
-  }
-}
-```
-
-### RAG Query Output
-When you query the indexed codebase, you receive:
-- **Retrieved Chunks**: The most similar code snippets from the FAISS index
-- **Generated Answer**: A comprehensive answer synthesizing the retrieved context
-
----
-
-## 📁 Project Structure
+## 📂 Project Structure
 
 ```
-Python_code_analyser/
-├── analyzer.py              # Main CLI entry point
-├── extractor.py             # AST-based entity extraction
-├── relationships.py         # Function call relationship detection
-├── output.py                # JSON saving and terminal display
-├── sample.py                # Example Python file for testing
-├── result.json              # Analysis output (generated)
-├── requirements.txt         # Python dependencies
-├── rag/                      # RAG (Retrieval-Augmented Generation) subsystem
-│   ├── chunker.py           # Converts analysis to text chunks
-│   ├── embeddings.py        # Generates vector embeddings
-│   ├── faiss_index.py       # FAISS index creation/loading
-│   ├── retriever.py         # Semantic search from FAISS
-│   ├── llm_interface.py     # LLM answer generation
-│   ├── pipeline.py          # RAG orchestration (retrieve + generate)
-│   ├── index.faiss          # Persisted FAISS index (generated)
-│   ├── chunks.pkl           # Persisted code chunks (generated)
-│   └── qa_test.md           # Test documentation
-├── ui/                       # Web interface
-│   └── app.py               # Streamlit web application
-└── README.md                # This file
+d:\Python_code_analyser/
+├── core/                    ← NEW: Core analysis engine
+│   ├── __init__.py
+│   ├── ast_parser.py        (SafeParser, EntityExtractor, RelationshipExtractor)
+│   ├── models.py            (Entity, Function, Class, Import, FileAnalysis)
+│   └── __pycache__/
+│
+├── utils/                   ← NEW: Cross-cutting utilities
+│   ├── __init__.py
+│   ├── logger.py            (Logger, get_logger, context management)
+│   ├── config.py            (Config class, env var + .env support)
+│   └── __pycache__/
+│
+├── interfaces/              ← NEW: Placeholder for Phase 2
+│   ├── __init__.py
+│   └── __pycache__/
+│
+├── services/                ← NEW: Placeholder for Phase 2
+│   ├── __init__.py
+│   └── __pycache__/
+│
+├── rag/                     ← EXISTING: RAG subsystem (unchanged)
+│   ├── chunker.py
+│   ├── embeddings.py
+│   ├── faiss_index.py
+│   ├── llm_interface.py
+│   ├── pipeline.py
+│   ├── retriever.py
+│   ├── index.faiss          (FAISS index - preserved)
+│   ├── chunks.pkl           (Code chunks - preserved)
+│   └── qa_test.md
+│
+├── ui/                      ← EXISTING: Streamlit web UI (unchanged)
+│   └── app.py
+│
+├── analyzer.py              ← REFACTORED: CLI wrapper (delegates to core/)
+├── extractor.py             ← LEGACY: Backward compatibility wrapper
+├── relationships.py         ← LEGACY: Backward compatibility wrapper
+├── output.py                ← EXISTING: JSON output (unchanged)
+├── sample.py                ← Test file
+├── result.json              ← Analysis output (generated)
+│
+├── .env                     ← Custom configuration (optional)
+├── .env.example             ← NEW: Configuration template
+├── requirements.txt         ← Python dependencies
+├── README.md                ← This file
+├── PHASE_1_COMPLETION.md    ← NEW: Phase 1 detailed summary
+├── QUICK_REFERENCE.md       ← NEW: Quick reference guide
+└── LICENSE
 ```
 
 ---
@@ -268,79 +196,374 @@ Python_code_analyser/
 ```
 Python File
     ↓
-AST Parsing (analyzer.py)
+[analyzer.py delegates to core/ast_parser.py]
     ↓
-Extract Entities (extractor.py)
-    ├─ Functions, Classes, Imports
+SafeParser.parse_file()
+    ├─ Pass 1: EntityExtractor → Functions, Classes, Imports
+    ├─ Pass 2: RelationshipExtractor → Calls, Inheritance
     ↓
-Extract Relationships (relationships.py)
-    ├─ Function call mappings
+FileAnalysis (typed, immutable)
+    ├─ entities, relationships, errors
     ↓
 [For Analysis Mode]
-    ↓
-Save JSON (output.py)
-    ↓
-result.json
+    ├─ Convert to legacy format
+    └─ Save JSON → result.json
     
 [For Indexing Mode]
-    ↓
-Create Chunks (chunker.py)
-    ↓
-Generate Embeddings (embeddings.py)
-    ├─ Uses Sentence Transformers
-    ↓
-Build FAISS Index (faiss_index.py)
-    ├─ Saves index.faiss + chunks.pkl
-    ↓
+    ├─ Create chunks (rag/chunker.py)
+    ├─ Generate embeddings (rag/embeddings.py)
+    ├─ Build FAISS index (rag/faiss_index.py)
+    └─ Save → index.faiss + chunks.pkl
+    
 [For Query Mode]
-    ↓
-Query → Embedding (embeddings.py)
-    ↓
-FAISS Search (retriever.py)
-    ├─ Top-k similar chunks
-    ↓
-Generate Answer (llm_interface.py)
-    ↓
-Result
+    ├─ Load FAISS index
+    ├─ Search for similar chunks
+    ├─ Generate answer (rag/llm_interface.py)
+    └─ Return results
 ```
+
+## 📋 Installation & Setup
+
+### Prerequisites
+- Python 3.10+ (tested on Python 3.14)
+- pip or conda
+
+### Installation
+
+1. **Clone or download the repository**
+   ```bash
+   cd d:\Python_code_analyser
+   ```
+
+2. **Create a virtual environment**
+   ```bash
+   python -m venv venv
+   .\venv\Scripts\activate  # On Windows
+   source venv/bin/activate  # On macOS/Linux
+   ```
+
+3. **Install dependencies**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. **Optional: Create .env file for custom configuration**
+   ```bash
+   cp .env.example .env
+   # Edit .env with your settings
+   ```
+
+### Dependencies
+See `requirements.txt` for the complete list. Key packages:
+- `sentence-transformers`: Semantic embeddings
+- `faiss-cpu`: Vector similarity search
+- `streamlit`: Web UI
+- `networkx`: Graph analysis (Phase 2+)
+
+## 🚀 Quick Start
+
+### 1. Analyze a Python File (Default)
+
+Extract code structure from any Python file:
+
+```bash
+python analyzer.py sample.py
+```
+
+**Output:**
+- Console: Detailed analysis summary (functions, classes, imports, relationships)
+- File: `result.json` with structured analysis data
+
+**Configuration:**
+Uses structured logging and configuration from `utils/config.py`. Override with environment variables or `.env` file.
+
+### 2. Index for RAG (Semantic Search)
+
+Build a FAISS index for intelligent code querying:
+
+```bash
+python analyzer.py sample.py --command index
+```
+
+**Steps:**
+1. Analyzes the file (AST extraction)
+2. Creates semantic chunks from code structure
+3. Generates embeddings using Sentence Transformers
+4. Builds and saves FAISS index
+5. Saves chunks metadata
+
+**Output:**
+- `rag/index.faiss`: FAISS vector index
+- `rag/chunks.pkl`: Code chunks metadata
+
+### 3. Query via CLI
+
+Search the indexed codebase using natural language:
+
+```bash
+python analyzer.py --command query --query "What functions handle data loading?"
+```
+
+**Process:**
+1. Converts your question to embeddings
+2. Searches FAISS index for similar code chunks
+3. Retrieves matching functions/classes/imports
+4. Generates comprehensive answer
+
+### 4. Query via Web UI (Streamlit)
+
+Launch interactive web interface:
+
+```bash
+streamlit run ui/app.py
+```
+
+**Features:**
+- Browser-based interface
+- Real-time query input
+- Automatic index detection
+- Setup guidance
+
+---
+
+## 📚 Documentation
+
+- **[PHASE_1_COMPLETION.md](./PHASE_1_COMPLETION.md)**: Detailed Phase 1 architecture & changes
+- **[QUICK_REFERENCE.md](./QUICK_REFERENCE.md)**: Quick reference for common tasks
+- **[.env.example](./.env.example)**: Configuration options with explanations
+
+---
+
+## 🛠️ Configuration
+
+### Environment Variables
+
+All configuration can be set via environment variables or `.env` file. See `.env.example` for all options.
+
+**Common settings:**
+```bash
+# Logging
+LOG_LEVEL=INFO                  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+LOG_FILE=./logs/app.log         # Optional file logging
+
+# Embedding & RAG
+EMBEDDING_MODEL=sentence-transformers/all-MiniLM-L6-v2
+FAISS_INDEX_PATH=./rag/index.faiss
+
+# LLM Provider
+LLM_PROVIDER=dummy              # dummy (default), openai, local
+# OPENAI_API_KEY=sk-...         # If using OpenAI
+# OPENAI_MODEL=gpt-3.5-turbo
+```
+
+### Programmatic Configuration
+
+```python
+from utils.config import Config
+
+Config.initialize()
+log_level = Config.log_level()
+faiss_path = Config.faiss_index_path()
+
+# Validate configuration
+is_valid, warnings = Config.validate()
+for warning in warnings:
+    print(f"⚠️ {warning}")
+```
+
+---
+
+## 📊 Example Output
+
+### Analysis Output (JSON)
+```json
+{
+  "functions": [
+    {"name": "load_data", "line": 1},
+    {"name": "process_data", "line": 11}
+  ],
+  "classes": [
+    {"name": "Analyzer", "line": 14}
+  ],
+  "imports": [],
+  "relationships": {
+    "process_data": ["load_data"],
+    "Analyzer.run": ["process_data"]
+  }
+}
+```
+
+### Console Output (Analysis)
+```
+============================================================
+ANALYSIS SUMMARY
+============================================================
+
+📊 CODE ANALYSIS SUMMARY
+
+Functions:
+  - load_data (line 1)
+  - process_data (line 11)
+
+Classes:
+  - Analyzer (line 14)
+
+Function Calls:
+  process_data → load_data
+  Analyzer.run → process_data
+```
+
+---
+
+## 🎓 Use Cases
+
+### 1. **Legacy Code Assessment**
+Quickly understand the structure of inherited codebases:
+```bash
+python analyzer.py large_legacy_app.py > architecture_report.txt
+```
+
+### 2. **Refactoring Planning**
+Identify tightly-coupled modules before extracting services:
+```bash
+python analyzer.py monolith.py --command index
+python analyzer.py --command query --query "Which functions are called most frequently?"
+```
+
+### 3. **Knowledge Transfer**
+Document code architecture for new team members:
+```bash
+python analyzer.py app.py > team_docs/architecture.json
+streamlit run ui/app.py  # Interactive exploration
+```
+
+### 4. **Microservices Migration** (Phase 2+)
+Get AI-powered recommendations for service extraction:
+```bash
+python analyzer.py monolith.py --command refactor
+# Returns: Suggested microservices, domain boundaries, API contracts
+```
+
+---
+
+## 🔮 Roadmap
+
+### Phase 1: ✅ Core Architecture (COMPLETE)
+- [x] Clean layered architecture
+- [x] AST-based code analysis
+- [x] Structured logging & configuration
+- [x] Backward compatibility maintained
+- [x] Type-safe data models
+
+### Phase 2: 🚀 AI Analysis (In Progress)
+- [ ] High-coupling module detection
+- [ ] Refactoring opportunity suggestions
+- [ ] Service extraction recommendations
+- [ ] Circular dependency detection
+- [ ] Architecture explanation generation
+
+### Phase 3: 🚀 FastAPI Backend
+- [ ] REST API endpoints
+- [ ] Authentication & authorization
+- [ ] Integration with CI/CD pipelines
+- [ ] Analysis result caching
+- [ ] Batch processing
+
+### Phase 4: 🚀 Advanced UI
+- [ ] Dependency graph visualization
+- [ ] Interactive architecture diagram
+- [ ] Refactoring impact analysis
+- [ ] Team collaboration features
+
+### Phase 5: 🚀 Enterprise Features
+- [ ] Multi-language support (Java, C#, Go, etc.)
+- [ ] Custom analysis rules
+- [ ] Integration with code review tools
+- [ ] Automated modernization reports
+- [ ] Docker containerization
 
 ---
 
 ## 🤝 Contributing
 
-Contributions are welcome! Typical improvements:
-- Add unit tests for all modules
-- Add CLI flags for custom output paths (--output, --chunk-size)
-- Add support for batch file/directory scanning
-- Enhance RAG with more sophisticated chunking strategies
-- Add support for multi-file analysis with cross-file relationships
-- Integrate with real LLMs (OpenAI, HuggingFace, etc.)
-- Add metrics for embedding quality
-- Export results to different formats (HTML, Markdown)
+We welcome contributions! Areas of interest:
 
-Please open an issue or submit a pull request.
+### Code Quality
+- [ ] Unit tests for all modules
+- [ ] Integration tests
+- [ ] Performance benchmarks
+
+### Features
+- [ ] Additional chunking strategies
+- [ ] Support for more LLM providers
+- [ ] Enhanced visualization options
+- [ ] Language-specific analysis rules
+
+### Documentation
+- [ ] API documentation
+- [ ] Video tutorials
+- [ ] Architecture decision records (ADRs)
+
+See [PHASE_1_COMPLETION.md](./PHASE_1_COMPLETION.md) for detailed architecture and [QUICK_REFERENCE.md](./QUICK_REFERENCE.md) for development guide.
 
 ---
 
-## 💡 Future Enhancements
+## 💡 Tips & Tricks
 
-- [ ] Batch processing for multiple files
-- [ ] Visualization of code dependency graphs
-- [ ] Cross-file function tracking
-- [ ] Integration with real LLMs (GPT, Claude, etc.)
-- [ ] Support for other languages (Java, C++, Go)
-- [ ] Performance benchmarks and optimization
-- [ ] Advanced chunking strategies (by function, by logical blocks)
-- [ ] Caching layer for FAISS indexes
-- [ ] REST API for programmatic access
-- [ ] Docker containerization for easy deployment
+### Analyzing Large Files
+```bash
+# Skip large files to avoid memory issues
+export MAX_FILE_SIZE_MB=50
+python analyzer.py huge_file.py
+```
+
+### Custom Logging
+```bash
+export LOG_LEVEL=DEBUG
+export LOG_FILE=analysis.log
+python analyzer.py sample.py
+# Logs to console AND analysis.log
+```
+
+### Using Different Embedding Models
+```bash
+# Faster, smaller model
+export EMBEDDING_MODEL=sentence-transformers/all-MiniLM-L6-v2
+
+# More accurate, larger model
+export EMBEDDING_MODEL=sentence-transformers/all-mpnet-base-v2
+```
+
+---
+
+## 📞 Support & Feedback
+
+- 📖 **Documentation**: See [PHASE_1_COMPLETION.md](./PHASE_1_COMPLETION.md) and [QUICK_REFERENCE.md](./QUICK_REFERENCE.md)
+- 💬 **Questions**: Check existing issues or create a new one
+- 🐛 **Bug Reports**: Please include Python version, error message, and reproduction steps
+- 📚 **Feature Requests**: Describe the use case and expected behavior
 
 ---
 
 ## 📄 License
 
-This project is open source and available under the MIT License.
+This project is open source and available under the MIT License. See [LICENSE](./LICENSE) for details.
 
 ---
 
-Made with ❤️ by the Python Code Analyzer project.
+## 🎯 Vision
+
+The **Legacy Code Modernization Platform** aims to become the industry standard for:
+- Understanding complex legacy codebases
+- Planning safe refactoring and modernization
+- Automating knowledge transfer between teams
+- Guiding monolith-to-microservices migrations
+- Supporting enterprise code quality improvements
+
+**Current Status**: Phase 1 ✅ Complete  
+**Next Goals**: Phase 2 (AI Analysis) → Phase 3 (FastAPI) → Phase 4 (Advanced UI)
+
+---
+
+Made with ❤️ for developers who inherit legacy code.  
+*"Understanding code is the first step to improving it."*

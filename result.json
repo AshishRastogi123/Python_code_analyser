@@ -2,40 +2,29 @@
   "functions": [
     {
       "name": "load_data",
-      "line": 1,
-      "docstring": ""
+      "line": 1
     },
     {
       "name": "hello",
-      "line": 3,
-      "docstring": ""
+      "line": 3
     },
     {
       "name": "hi",
-      "line": 7,
-      "docstring": ""
+      "line": 7
     },
     {
       "name": "process_data",
-      "line": 11,
-      "docstring": ""
-    },
-    {
-      "name": "run",
-      "line": 15,
-      "docstring": ""
+      "line": 11
     },
     {
       "name": "add",
-      "line": 17,
-      "docstring": ""
+      "line": 17
     }
   ],
   "classes": [
     {
       "name": "Analyzer",
-      "line": 14,
-      "docstring": ""
+      "line": 14
     }
   ],
   "imports": [],
@@ -46,7 +35,7 @@
     "process_data": [
       "load_data"
     ],
-    "run": [
+    "Analyzer.run": [
       "process_data"
     ]
   }
