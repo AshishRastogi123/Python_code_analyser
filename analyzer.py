@@ -227,13 +227,13 @@ def main():
         description="Legacy Code Modernization Platform - Code Analysis CLI"
     )
     parser.add_argument(
-        "file",
+        "path",
         nargs="?",
-        help="Path to Python file to analyze"
+        help="Path to Python file or directory to analyze"
     )
     parser.add_argument(
         "--command",
-        choices=["analyze", "analyze-project", "index", "query"],
+        choices=["analyze", "analyze_dir", "index", "query"],
         help="Command to run (default: analyze if file provided)"
     )
     parser.add_argument(
@@ -243,20 +243,20 @@ def main():
 
     args = parser.parse_args()
 
-    # Default behavior: if only a file is provided, analyze it
-    if args.file and not args.command:
+    # Default behavior: if only a path is provided, analyze it
+    if args.path and not args.command:
         args.command = "analyze"
-    elif not args.file and not args.command:
+    elif not args.path and not args.command:
         parser.print_help()
         return
 
     try:
         if args.command == "analyze":
-            logger.info(f"Running 'analyze' command on {args.file}")
+            logger.info(f"Running 'analyze' command on {args.path}")
             print("=" * 60)
             print("PYTHON CODE ANALYSIS REPORT")
             print("=" * 60)
-            result = analyze_file(args.file)
+            result = analyze_file(args.path)
             save_json(result, filename="result.json")
             print("\n✓ Analysis complete!")
             print("\n" + "=" * 60)
@@ -268,25 +268,22 @@ def main():
             print("=" * 60)
             print_summary(result)
             print("=" * 60)
-        
-        elif args.command == "analyze-project":
-            logger.info(f"Running 'analyze-project' command on {args.file}")
+
+        elif args.command == "analyze_dir":
+            logger.info(f"Running 'analyze_dir' command on {args.path}")
             print("=" * 60)
-            print("PYTHON PROJECT ANALYSIS REPORT")
+            print("PROJECT ANALYSIS SUMMARY")
             print("=" * 60)
-            project_analysis = analyze_project(args.file)
-            print("\n✓ Project analysis complete!")
-            print(f"  → Total files analyzed: {len(project_analysis.file_analyses)}")
-            print(f"  → Total functions found: {len(project_analysis.all_functions)}")
-            print(f"  → Total classes found: {len(project_analysis.all_classes)}")
-            print(f"  → Total relationships: {len(project_analysis.all_relationships)}")
-            if project_analysis.errors:
-                print(f"  → Errors encountered: {len(project_analysis.errors)}")
+            print(f"Path: {args.path}")
+            project_analysis = analyze_project(args.path)
+            print(f"Python files analyzed: {len(project_analysis.file_analyses)}")
+            print(f"Functions found: {len(project_analysis.all_functions)}")
+            print(f"Classes found: {len(project_analysis.all_classes)}")
             print("=" * 60)
 
         elif args.command == "index":
-            logger.info(f"Running 'index' command on {args.file}")
-            index_file(args.file)
+            logger.info(f"Running 'index' command on {args.path}")
+            index_file(args.path)
         
         elif args.command == "query":
             logger.info(f"Running 'query' command: {args.query}")

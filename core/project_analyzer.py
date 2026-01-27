@@ -18,10 +18,9 @@ Architecture Pattern:
 import os
 import json
 from pathlib import Path
-from typing import List, Set, Dict, Optional
-from dataclasses import dataclass
+from typing import List, Optional
 
-from core.models import ProjectAnalysis, FileAnalysis, Relationship, RelationType, Location
+from core.models import ProjectAnalysis, FileAnalysis, Relationship
 from core.ast_parser import SafeParser
 from utils.logger import get_logger
 from utils.config import Config
@@ -46,15 +45,35 @@ class ProjectAnalyzer:
         Initialize project analyzer.
 
         Args:
-            root_path: Root directory path to analyze
+            root_path: Root directory path to analyze (legacy code only)
             project_name: Optional project name (defaults to directory name)
         """
         self.root_path = Path(root_path).resolve()
         self.project_name = project_name or self.root_path.name
-        self.ignore_patterns = set(Config.ignore_patterns())
-        self.ignore_patterns.update(['__pycache__', '.git', 'venv', 'env', '.venv'])
 
-        logger.info(f"Initialized ProjectAnalyzer for {self.project_name} at {self.root_path}")
+        # Ignore patterns (configurable + defaults)
+        self.ignore_patterns = set(Config.ignore_patterns())
+        self.ignore_patterns.update({
+            "__pycache__",
+            ".git",
+            "venv",
+            "env",
+            ".venv",
+            "node_modules"
+        })
+
+        # SAFETY CHECK: prevent analyzing analyzer source itself
+        repo_root = Path(__file__).resolve().parents[1]
+        if self.root_path == repo_root or repo_root in self.root_path.parents:
+            logger.warning(
+                "Root path appears to include analyzer source code. "
+                "Expected an external legacy code directory."
+            )
+
+        logger.info(f"Initialized ProjectAnalyzer")
+        logger.info(f"Project name: {self.project_name}")
+        logger.info(f"Legacy code root: {self.root_path}")
+        logger.info("Analyzer source code is excluded by design")
 
     def analyze_project(self) -> ProjectAnalysis:
         """
@@ -70,52 +89,64 @@ class ProjectAnalyzer:
 
         logger.info(f"Found {len(file_paths)} Python files to analyze")
 
-        for i, file_path in enumerate(file_paths, 1):
-            logger.info(f"Analyzing file {i}/{len(file_paths)}: {file_path}")
-            print(f"  → Analyzing {i}/{len(file_paths)}: {Path(file_path).name}")
+        for index, file_path in enumerate(file_paths, start=1):
+            logger.info(f"Analyzing file {index}/{len(file_paths)}: {file_path}")
+            print(f"  → Analyzing {index}/{len(file_paths)}: {Path(file_path).name}")
 
             try:
                 file_analysis = SafeParser.parse_file(file_path)
+
+                # Optional metadata tagging
+                if "test" in Path(file_path).parts:
+                    file_analysis.metadata["is_test_file"] = True
+
                 project_analysis.file_analyses.append(file_analysis)
 
                 if file_analysis.errors:
                     project_analysis.errors.extend(file_analysis.errors)
                     logger.warning(f"Errors in {file_path}: {file_analysis.errors}")
 
-            except Exception as e:
-                error_msg = f"Failed to analyze {file_path}: {e}"
+            except Exception as exc:
+                error_msg = f"Failed to analyze {file_path}: {exc}"
                 project_analysis.errors.append(error_msg)
                 logger.error(error_msg)
 
         # Build cross-file relationships
         logger.info("Building cross-file relationships")
-        project_analysis.all_relationships = self._build_cross_file_relationships(project_analysis.file_analyses)
+        project_analysis.all_relationships = self._build_cross_file_relationships(
+            project_analysis.file_analyses
+        )
 
-        logger.info(f"Project analysis complete: {len(project_analysis.file_analyses)} files analyzed")
+        logger.info(
+            f"Project analysis complete: {len(project_analysis.file_analyses)} files analyzed"
+        )
         return project_analysis
 
     def _collect_python_files(self) -> List[str]:
         """
-        Recursively collect all Python files in the project, respecting ignore patterns.
+        Recursively collect all Python files in the project,
+        respecting ignore patterns.
 
         Returns:
             List of absolute paths to Python files
         """
-        python_files = []
+        python_files: List[str] = []
 
         for root, dirs, files in os.walk(self.root_path):
             root_path = Path(root)
 
             # Skip ignored directories
-            dirs[:] = [d for d in dirs if not self._should_ignore(root_path / d)]
+            dirs[:] = [
+                d for d in dirs
+                if not self._should_ignore(root_path / d)
+            ]
 
-            # Skip if root directory should be ignored
+            # Skip ignored roots
             if self._should_ignore(root_path):
                 continue
 
-            # Collect .py files
             for file in files:
-                if file.endswith('.py'):
+                if file.endswith(".py"):
                     file_path = root_path / file
                     if not self._should_ignore(file_path):
                         python_files.append(str(file_path))
@@ -124,7 +155,7 @@ class ProjectAnalyzer:
 
     def _should_ignore(self, path: Path) -> bool:
         """
-        Check if a path should be ignored based on ignore patterns.
+        Check if a path should be ignored.
 
         Args:
             path: Path to check
@@ -132,22 +163,21 @@ class ProjectAnalyzer:
         Returns:
             True if path should be ignored
         """
-        path_str = str(path)
-
-        # Check exact matches
+        # Ignore exact directory names
         if path.name in self.ignore_patterns:
             return True
 
-        # Check patterns
-        for pattern in self.ignore_patterns:
-            if pattern in path_str:
-                return True
+        # Ignore hidden directories/files
+        if any(part.startswith(".") for part in path.parts):
+            return True
 
         return False
 
-    def _build_cross_file_relationships(self, file_analyses: List[FileAnalysis]) -> List[Relationship]:
+    def _build_cross_file_relationships(
+        self, file_analyses: List[FileAnalysis]
+    ) -> List[Relationship]:
         """
-        Build relationships that span across files (imports, calls between modules).
+        Build relationships that span across files.
 
         Args:
             file_analyses: List of FileAnalysis objects
@@ -155,22 +185,20 @@ class ProjectAnalyzer:
         Returns:
             List of cross-file relationships
         """
-        relationships = []
+        relationships: List[Relationship] = []
         entity_map = {}  # entity_name -> (file_path, entity)
 
-        # Build entity map for lookup
+        # Build entity lookup
         for fa in file_analyses:
             for entity in fa.entities:
                 entity_map[entity.name] = (fa.file_path, entity)
 
-        # Analyze each file's relationships
+        # Build cross-file relationships
         for fa in file_analyses:
             for rel in fa.relationships:
-                # Check if target exists in another file
                 if rel.target in entity_map:
-                    target_file, target_entity = entity_map[rel.target]
+                    target_file, _ = entity_map[rel.target]
                     if target_file != fa.file_path:
-                        # Cross-file relationship
                         cross_rel = Relationship(
                             source=f"{fa.file_path}::{rel.source}",
                             target=f"{target_file}::{rel.target}",
@@ -180,44 +208,56 @@ class ProjectAnalyzer:
                                 **rel.metadata,
                                 "cross_file": True,
                                 "source_file": fa.file_path,
-                                "target_file": target_file
-                            }
+                                "target_file": target_file,
+                            },
                         )
                         relationships.append(cross_rel)
 
         logger.info(f"Built {len(relationships)} cross-file relationships")
         return relationships
 
-    def save_analysis(self, project_analysis: ProjectAnalysis, output_path: Optional[str] = None) -> str:
+    def save_analysis(
+        self,
+        project_analysis: ProjectAnalysis,
+        output_path: Optional[str] = None,
+    ) -> str:
         """
-        Save project analysis to JSON file.
+        Save project analysis to a JSON file.
 
         Args:
             project_analysis: Analysis results to save
-            output_path: Optional output path (defaults to project_name_analysis.json)
+            output_path: Optional output path
 
         Returns:
-            Path to saved file
+            Path to saved JSON file
         """
         if output_path is None:
             output_path = f"{self.project_name}_analysis.json"
 
         output_path = Path(output_path).resolve()
 
-        with open(output_path, 'w', encoding='utf-8') as f:
-            json.dump(project_analysis.to_dict(), f, indent=2, ensure_ascii=False)
+        with open(output_path, "w", encoding="utf-8") as f:
+            json.dump(
+                project_analysis.to_dict(),
+                f,
+                indent=2,
+                ensure_ascii=False,
+            )
 
         logger.info(f"Saved project analysis to {output_path}")
         return str(output_path)
 
 
-def analyze_project(root_path: str, project_name: Optional[str] = None,
-                   save_output: bool = True) -> ProjectAnalysis:
+def analyze_project(
+    root_path: str,
+    project_name: Optional[str] = None,
+    save_output: bool = True,
+) -> ProjectAnalysis:
     """
     Convenience function to analyze an entire project.
 
     Args:
-        root_path: Root directory of the project
+        root_path: Root directory of legacy code
         project_name: Optional project name
         save_output: Whether to save JSON output
 
