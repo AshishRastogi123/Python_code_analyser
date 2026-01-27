@@ -1,6 +1,6 @@
 # Legacy Code Modernization Platform
 
-A powerful, enterprise-grade Python tool for analyzing and understanding legacy codebases. Combines AST-based code analysis with Retrieval-Augmented Generation (RAG) to provide intelligent code insights.
+An AI-assisted, domain-aware Python code intelligence and modernization platform. Specializes in analyzing ERPNext Accounts modules with semantic understanding of accounting workflows, enabling intelligent legacy code assessment and Python-to-Go migration planning.
 
 **Current Status**: Phase 1 ✅ (Core Architecture) | Phase 2 ✅ (Semantic Analysis) | Phase 3+ 🚀 (AI Analysis & FastAPI)
 
@@ -25,6 +25,30 @@ When working with unfamiliar or large legacy Python codebases, development teams
 - **Modernization Barriers**: Can't migrate to microservices without understanding architecture
 
 This tool automates architectural analysis using **AST-based code extraction** and **Retrieval-Augmented Generation (RAG)**.
+
+---
+
+## 🧠 Semantic Analysis & Domain Intelligence
+
+### ERPNext Accounts Module Focus
+This platform specializes in analyzing **ERPNext Accounts modules**, providing domain-aware intelligence for accounting systems. Unlike generic code analyzers, it understands:
+
+- **Accounting Concepts**: Ledger, journal entries, payments, taxes, reconciliation
+- **Business Workflows**: Journal Entry → Ledger Posting → Trial Balance patterns
+- **Legacy Modernization**: Python-to-Go migration planning with business context
+
+### Key Differentiators
+- **Domain Tagging**: Automatically classifies code into accounting concepts (ledger, payment, tax, etc.)
+- **Workflow Detection**: Identifies business process patterns and dependencies
+- **Quality Scoring**: Prioritizes modernization efforts based on code quality and business impact
+- **Semantic Querying**: Natural language search with accounting domain awareness
+
+### Why This Matters for Legacy Modernization
+Traditional code analysis shows "what" the code does. This platform explains "why" - connecting technical implementation to business processes, enabling:
+- **Informed Migration Decisions**: Prioritize which modules to migrate first
+- **Service Boundary Identification**: Use business workflows to define microservice boundaries
+- **Risk Assessment**: Understand business impact of refactoring decisions
+- **Knowledge Preservation**: Document business logic alongside technical architecture
 
 ---
 
@@ -356,6 +380,24 @@ python analyzer.py --command query_semantic --query "ledger posting functions" -
 - Workflow detection (Journal Entry → Ledger Posting patterns)
 - Quality scoring for modernization prioritization (HIGH/MEDIUM/LOW)
 - Semantic search with relevance ranking and explanations
+
+### Example Semantic Query Output
+```bash
+$ python analyzer.py --command query_semantic --query "ledger posting functions" --index project_semantic.json
+
+Query Results:
+1. make_ledger_entry (ledger_entry.py:45)
+   Relevance: 0.92 | Quality: HIGH | Domain: ledger
+   Reason: Matches query terms: ledger, posting | Identified as accounting-related code
+
+2. update_ledger_balance (ledger.py:123)
+   Relevance: 0.88 | Quality: HIGH | Domain: ledger
+   Reason: Matches query terms: ledger | High-quality, well-documented code
+
+3. post_journal_to_ledger (journal.py:78)
+   Relevance: 0.85 | Quality: MEDIUM | Domain: journal_entry, ledger
+   Reason: Matches query terms: posting, ledger | Workflow: Journal Entry → Ledger Posting
+```
 
 ---
 
