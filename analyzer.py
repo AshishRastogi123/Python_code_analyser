@@ -1,15 +1,16 @@
 """
-Python Code Analyzer with RAG - CLI Entry Point
+Python Code Analyzer with RAG and Semantic Analysis - CLI Entry Point
 
 This module serves as the command-line interface and orchestrator for the
-legacy code modernization platform. It delegates to core modules for analysis
-and RAG services.
+legacy code modernization platform with domain-aware semantic analysis.
 
 Architecture:
 - core.ast_parser: AST-based code analysis
+- core.project_analyzer: Project-wide analysis with semantic indexing
+- core.semantic_query: Domain-aware querying
 - rag.*: Semantic search and retrieval
-- output: Legacy compatibility wrapper
 """
+
 from dotenv import load_dotenv
 from pathlib import Path
 load_dotenv(Path(__file__).resolve().parent / ".env")
@@ -26,7 +27,9 @@ from utils.config import Config
 # Import core analysis modules
 from core.ast_parser import SafeParser
 from core.models import EntityType
-from core.project_analyzer import analyze_project
+from core.project_analyzer import analyze_project, analyze_project_with_semantic
+from core.semantic_index import SemanticIndexer
+from core.semantic_query import query_semantic_index
 
 # Import RAG modules (lazy loading to avoid dependency issues)
 def _import_rag_modules():
@@ -34,7 +37,7 @@ def _import_rag_modules():
     global create_chunks, generate_embeddings, load_model, build_and_save_index, rag_query
     if 'create_chunks' not in globals():
         from rag.chunker import create_chunks
-        from rag.embeddings import generate_embeddings, load_model
+        from rag.embeddings import generate_embeddings
         from rag.faiss_index import build_and_save_index
         from rag.pipeline import rag_query
 
@@ -64,19 +67,19 @@ def analyze_file(file_path: str) -> dict:
         (maintains legacy format for compatibility with output.py)
     """
     logger.info(f"Starting analysis of file: {file_path}")
-    
+
     # Use the new SafeParser from core.ast_parser
     file_analysis = SafeParser.parse_file(file_path)
-    
+
     if file_analysis.errors:
         logger.warning(f"Errors during analysis: {file_analysis.errors}")
         print(f"✗ Analysis errors: {file_analysis.errors}")
         sys.exit(1)
-    
+
     # Convert new format to legacy format for backward compatibility
     logger.debug(f"Converting to legacy format")
     legacy_result = _convert_to_legacy_format(file_analysis)
-    
+
     return legacy_result
 
 
@@ -95,40 +98,41 @@ def index_file(file_path: str) -> None:
     """
     logger.info(f"Starting indexing of file: {file_path}")
     print(f"\n✓ Starting indexing of file: {file_path}")
-    
+
     try:
         print(f"  → Step 1: Analyzing file...")
         result = analyze_file(file_path)
         logger.debug(f"Analysis produced {len(result.get('functions', []))} functions")
         print(f"  ✓ Analysis complete")
-        
+
         print(f"  → Step 2: Creating chunks...")
         chunks = create_chunks(result)
         logger.info(f"Created {len(chunks)} semantic chunks")
         print(f"  ✓ Created {len(chunks)} chunks")
-        
+
         print(f"  → Step 3: Loading embedding model...")
         model = load_model()
         logger.info(f"Embedding model loaded: {Config.embedding_model()}")
         print(f"  ✓ Model loaded successfully")
-        
+
         print(f"  → Step 4: Generating embeddings...")
         embeddings = generate_embeddings(chunks, model)
         logger.debug(f"Generated {len(embeddings)} embeddings")
         print(f"  ✓ Generated embeddings for {len(embeddings)} chunks")
-        
+
         print(f"  → Step 5: Building FAISS index...")
         build_and_save_index(chunks, embeddings)
         logger.info(f"FAISS index saved to {Config.faiss_index_path()}")
         print(f"  ✓ FAISS index built and saved")
-        
+
         print(f"\n✓ Indexing complete! Indexed {len(chunks)} chunks for {file_path}")
         logger.info(f"Indexing complete for {file_path}")
-    
+
     except Exception as e:
         logger.error(f"Indexing failed: {e}", exc_info=True)
         print(f"✗ Indexing failed: {e}")
         sys.exit(1)
+
 
 def query_codebase(query: str) -> None:
     """
@@ -160,12 +164,119 @@ def query_codebase(query: str) -> None:
         print(f"✗ Query failed: {e}")
         sys.exit(1)
 
+
+def analyze_project_semantic(root_path: str) -> None:
+    """
+    Analyze entire project with semantic indexing for domain-aware insights.
+
+    Steps:
+    1. Analyze project structure and relationships
+    2. Build semantic index with domain tagging
+    3. Detect accounting workflows
+    4. Score code quality and relevance
+    5. Save semantic index
+
+    Args:
+        root_path: Root directory of the project to analyze
+    """
+    logger.info(f"Starting semantic project analysis: {root_path}")
+    print(f"\n✓ Starting semantic analysis of project: {root_path}")
+
+    try:
+        print(f"  → Step 1: Analyzing project structure...")
+        analysis, semantic_index = analyze_project_with_semantic(root_path)
+        logger.info(f"Analyzed {len(analysis.file_analyses)} files")
+        print(f"  ✓ Project structure analyzed")
+
+        print(f"  → Step 2: Building semantic index...")
+        logger.info(f"Built semantic index with {len(semantic_index.entities)} entities")
+        print(f"  ✓ Semantic index built")
+
+        print(f"  → Step 3: Domain tagging complete...")
+        accounting_files = sum(1 for sf in semantic_index.files.values() if sf.domain_context.is_accounting_related)
+        logger.info(f"Identified {accounting_files} accounting-related files")
+        print(f"  ✓ Tagged {accounting_files} accounting files")
+
+        print(f"  → Step 4: Workflow detection...")
+        logger.info(f"Detected {len(semantic_index.workflows)} workflows")
+        print(f"  ✓ Detected {len(semantic_index.workflows)} workflows")
+
+        print(f"  → Step 5: Quality scoring...")
+        high_quality = sum(1 for se in semantic_index.entities.values() if se.context_score.overall_score.value == "HIGH")
+        logger.info(f"Scored {high_quality} high-quality entities")
+        print(f"  ✓ Scored {high_quality} high-quality entities")
+
+        print(f"\n✓ Semantic analysis complete!")
+        print(f"  - Files analyzed: {len(semantic_index.files)}")
+        print(f"  - Entities indexed: {len(semantic_index.entities)}")
+        print(f"  - Workflows detected: {len(semantic_index.workflows)}")
+        print(f"  - Accounting files: {accounting_files}")
+        print(f"  - High-quality entities: {high_quality}")
+
+        logger.info("Semantic project analysis complete")
+
+    except Exception as e:
+        logger.error(f"Semantic analysis failed: {e}", exc_info=True)
+        print(f"✗ Semantic analysis failed: {e}")
+        sys.exit(1)
+
+
+def query_semantic(query: str, index_path: str) -> None:
+    """
+    Query the semantic index for domain-aware code search.
+
+    Args:
+        query: Natural language query (e.g., "ledger posting functions")
+        index_path: Path to the semantic index JSON file
+    """
+    logger.info(f"Processing semantic query: '{query}' using index: {index_path}")
+    print(f"\n✓ Starting semantic query: '{query}'")
+
+    try:
+        print(f"  → Loading semantic index...")
+        indexer = SemanticIndexer()
+        semantic_index = indexer.load_index(index_path)
+        logger.info(f"Loaded index with {len(semantic_index.entities)} entities")
+        print(f"  ✓ Index loaded")
+
+        print(f"  → Executing query...")
+        results = query_semantic_index(query, semantic_index, max_results=10)
+        logger.info(f"Query returned {len(results)} results")
+        print(f"  ✓ Query executed")
+
+        print(f"\n📋 Query Results for: '{query}'")
+        print("=" * 80)
+
+        if not results:
+            print("No matching results found.")
+            return
+
+        for i, result in enumerate(results, 1):
+            print(f"\n{i}. {result.entity_name}")
+            print(f"   📁 File: {result.file_path}")
+            print(f"   🎯 Relevance: {result.relevance_score:.2f}")
+            print(f"   🏷️  Domain Tags: {', '.join(result.domain_tags) if result.domain_tags else 'None'}")
+            print(f"   ⭐ Quality: {result.context_score}")
+            if result.short_context:
+                print(f"   📝 Context: {result.short_context}")
+            if result.reasoning:
+                print(f"   💡 Why: {result.reasoning[0]}")
+
+        print(f"\n" + "=" * 80)
+        print(f"Found {len(results)} relevant results")
+
+    except Exception as e:
+        logger.error(f"Semantic query failed: {e}", exc_info=True)
+        print(f"✗ Semantic query failed: {e}")
+        sys.exit(1)
+
+
 def _convert_to_legacy_format(file_analysis) -> dict:
     """
     Convert FileAnalysis (new format) to legacy dict format.
 
     This maintains backward compatibility with output.py and existing code.
-    
+
     Legacy format:
     {
         "functions": [{"name": "func_name", "line": 42}, ...],
@@ -185,26 +296,26 @@ def _convert_to_legacy_format(file_analysis) -> dict:
         {"name": f.name, "line": f.location.line_start}
         for f in file_analysis.functions
     ]
-    
+
     # Extract classes
     classes = [
         {"name": c.name, "line": c.location.line_start}
         for c in file_analysis.classes
     ]
-    
+
     # Extract imports
     imports = [
         imp.module for imp in file_analysis.imports
         if imp.module  # Filter out empty module names
     ]
-    
+
     # Convert relationships to legacy format: {source: [targets]}
     relationships = {}
     for rel in file_analysis.relationships:
         if rel.source not in relationships:
             relationships[rel.source] = []
         relationships[rel.source].append(rel.target)
-    
+
     return {
         "functions": functions,
         "classes": classes,
@@ -215,16 +326,18 @@ def _convert_to_legacy_format(file_analysis) -> dict:
 
 def main():
     """
-    Command-line interface for the Python Code Analyzer.
+    Command-line interface for the Python Code Analyzer with Semantic Analysis.
 
-    Supports four commands:
+    Supports commands:
     - analyze: Extract code structure from a Python file
-    - analyze-project: Analyze entire Python project recursively
+    - analyze_project: Analyze entire Python project
+    - analyze_semantic: Analyze project with domain-aware semantic indexing
     - index: Build FAISS index for RAG queries
-    - query: Query the indexed codebase using natural language
+    - query: Query the indexed codebase using natural language (RAG)
+    - query_semantic: Query semantic index for domain-aware search
     """
     parser = argparse.ArgumentParser(
-        description="Legacy Code Modernization Platform - Code Analysis CLI"
+        description="Legacy Code Modernization Platform - Code Analysis CLI with Semantic Analysis"
     )
     parser.add_argument(
         "path",
@@ -233,12 +346,16 @@ def main():
     )
     parser.add_argument(
         "--command",
-        choices=["analyze", "analyze_dir", "index", "query"],
+        choices=["analyze", "analyze_project", "analyze_semantic", "index", "query", "query_semantic"],
         help="Command to run (default: analyze if file provided)"
     )
     parser.add_argument(
         "--query",
-        help="Query string for 'query' command"
+        help="Query string for 'query' or 'query_semantic' commands"
+    )
+    parser.add_argument(
+        "--index",
+        help="Path to semantic index JSON file for 'query_semantic' command"
     )
 
     args = parser.parse_args()
@@ -269,8 +386,8 @@ def main():
             print_summary(result)
             print("=" * 60)
 
-        elif args.command == "analyze_dir":
-            logger.info(f"Running 'analyze_dir' command on {args.path}")
+        elif args.command == "analyze_project":
+            logger.info(f"Running 'analyze_project' command on {args.path}")
             print("=" * 60)
             print("PROJECT ANALYSIS SUMMARY")
             print("=" * 60)
@@ -281,20 +398,34 @@ def main():
             print(f"Classes found: {len(project_analysis.all_classes)}")
             print("=" * 60)
 
+        elif args.command == "analyze_semantic":
+            logger.info(f"Running 'analyze_semantic' command on {args.path}")
+            analyze_project_semantic(args.path)
+
         elif args.command == "index":
             logger.info(f"Running 'index' command on {args.path}")
             index_file(args.path)
-        
+
         elif args.command == "query":
             logger.info(f"Running 'query' command: {args.query}")
             if not args.query:
                 print("✗ --query argument is required for 'query' command")
                 sys.exit(1)
             query_codebase(args.query)
-        
+
+        elif args.command == "query_semantic":
+            logger.info(f"Running 'query_semantic' command: {args.query}")
+            if not args.query:
+                print("✗ --query argument is required for 'query_semantic' command")
+                sys.exit(1)
+            if not args.index:
+                print("✗ --index argument is required for 'query_semantic' command")
+                sys.exit(1)
+            query_semantic(args.query, args.index)
+
         else:
             parser.print_help()
-    
+
     except KeyboardInterrupt:
         logger.info("Program interrupted by user")
         print("\n✗ Program interrupted")

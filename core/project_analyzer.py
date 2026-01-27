@@ -22,6 +22,7 @@ from typing import List, Optional
 
 from core.models import ProjectAnalysis, FileAnalysis, Relationship
 from core.ast_parser import SafeParser
+from core.semantic_index import SemanticIndexer, SemanticIndex
 from utils.logger import get_logger
 from utils.config import Config
 
@@ -95,10 +96,6 @@ class ProjectAnalyzer:
 
             try:
                 file_analysis = SafeParser.parse_file(file_path)
-
-                # Optional metadata tagging
-                if "test" in Path(file_path).parts:
-                    file_analysis.metadata["is_test_file"] = True
 
                 project_analysis.file_analyses.append(file_analysis)
 
@@ -247,6 +244,43 @@ class ProjectAnalyzer:
         logger.info(f"Saved project analysis to {output_path}")
         return str(output_path)
 
+    def build_semantic_index(self, project_analysis: ProjectAnalysis) -> SemanticIndex:
+        """
+        Build semantic index with domain tagging, workflows, and quality scores.
+
+        Args:
+            project_analysis: Complete project analysis
+
+        Returns:
+            SemanticIndex with domain-aware information
+        """
+        logger.info("Building semantic index")
+        indexer = SemanticIndexer()
+        return indexer.build_index(project_analysis)
+
+    def save_semantic_index(
+        self,
+        semantic_index: SemanticIndex,
+        output_path: Optional[str] = None,
+    ) -> str:
+        """
+        Save semantic index to a JSON file.
+
+        Args:
+            semantic_index: Semantic index to save
+            output_path: Optional output path
+
+        Returns:
+            Path to saved JSON file
+        """
+        if output_path is None:
+            output_path = f"{self.project_name}_semantic.json"
+
+        indexer = SemanticIndexer()
+        indexer.save_index(semantic_index, output_path)
+
+        return output_path
+
 
 def analyze_project(
     root_path: str,
@@ -272,3 +306,32 @@ def analyze_project(
         print(f"✓ Analysis saved to: {output_file}")
 
     return analysis
+
+
+def analyze_project_with_semantic(
+    root_path: str,
+    project_name: Optional[str] = None,
+    save_output: bool = True,
+) -> tuple[ProjectAnalysis, SemanticIndex]:
+    """
+    Convenience function to analyze project with semantic indexing.
+
+    Args:
+        root_path: Root directory of legacy code
+        project_name: Optional project name
+        save_output: Whether to save JSON outputs
+
+    Returns:
+        Tuple of (ProjectAnalysis, SemanticIndex)
+    """
+    analyzer = ProjectAnalyzer(root_path, project_name)
+    analysis = analyzer.analyze_project()
+    semantic_index = analyzer.build_semantic_index(analysis)
+
+    if save_output:
+        output_file = analyzer.save_analysis(analysis)
+        semantic_file = analyzer.save_semantic_index(semantic_index)
+        print(f"✓ Analysis saved to: {output_file}")
+        print(f"✓ Semantic index saved to: {semantic_file}")
+
+    return analysis, semantic_index
