@@ -2,7 +2,7 @@
 
 A powerful, enterprise-grade Python tool for analyzing and understanding legacy codebases. Combines AST-based code analysis with Retrieval-Augmented Generation (RAG) to provide intelligent code insights.
 
-**Current Status**: Phase 1 ✅ (Core Architecture) | Phase 2+ 🚀 (AI Analysis & FastAPI)
+**Current Status**: Phase 1 ✅ (Core Architecture) | Phase 2 ✅ (Semantic Analysis) | Phase 3+ 🚀 (AI Analysis & FastAPI)
 
 ---
 
@@ -42,7 +42,14 @@ This tool automates architectural analysis using **AST-based code extraction** a
 - **JSON Reports**: Structured analysis results for programmatic access
 - **Web UI**: Streamlit dashboard for interactive querying
 
-### Coming Soon (Phase 2+)
+### Current (Phase 2 ✅ - Semantic Analysis)
+- **Domain Tagging**: Rule-based classification of accounting concepts (ledger, journal_entry, payment, tax)
+- **Workflow Detection**: Identifies business process patterns (Journal Entry → Ledger Posting)
+- **Context Scoring**: Quality assessment for modernization prioritization (HIGH/MEDIUM/LOW)
+- **Semantic Indexing**: Unified index combining domain knowledge, workflows, and quality scores
+- **Semantic Querying**: Domain-aware search with natural language queries
+
+### Coming Soon (Phase 3+)
 - **Coupling Analysis**: Detect tightly-coupled modules
 - **Refactoring Suggestions**: AI-powered modernization recommendations
 - **Service Extraction**: Monolith → microservices recommendations
@@ -324,6 +331,32 @@ streamlit run ui/app.py
 - Automatic index detection
 - Setup guidance
 
+### 5. Semantic Analysis (Phase 2)
+
+Perform domain-aware analysis and querying for accounting systems:
+
+**Build Semantic Index:**
+```bash
+python analyzer.py /path/to/erpnext --command analyze_semantic
+```
+
+**Query Semantic Index:**
+```bash
+python analyzer.py --command query_semantic --query "ledger posting functions" --index project_semantic.json
+```
+
+**Example Queries:**
+- "journal entry validation"
+- "trial balance calculation"
+- "payment reconciliation"
+- "tax processing functions"
+
+**Features:**
+- Domain tagging of accounting concepts (ledger, journal_entry, payment, tax)
+- Workflow detection (Journal Entry → Ledger Posting patterns)
+- Quality scoring for modernization prioritization (HIGH/MEDIUM/LOW)
+- Semantic search with relevance ranking and explanations
+
 ---
 
 ## 📚 Documentation
@@ -455,27 +488,34 @@ python analyzer.py monolith.py --command refactor
 - [x] Backward compatibility maintained
 - [x] Type-safe data models
 
-### Phase 2: 🚀 AI Analysis (In Progress)
+### Phase 2: ✅ Semantic Analysis (COMPLETE)
+- [x] Domain tagging of accounting concepts
+- [x] Workflow detection (business process patterns)
+- [x] Context scoring for modernization prioritization
+- [x] Semantic indexing and querying
+- [x] Domain-aware search with relevance ranking
+
+### Phase 3: 🚀 AI Analysis (In Progress)
 - [ ] High-coupling module detection
 - [ ] Refactoring opportunity suggestions
 - [ ] Service extraction recommendations
 - [ ] Circular dependency detection
 - [ ] Architecture explanation generation
 
-### Phase 3: 🚀 FastAPI Backend
+### Phase 4: 🚀 FastAPI Backend
 - [ ] REST API endpoints
 - [ ] Authentication & authorization
 - [ ] Integration with CI/CD pipelines
 - [ ] Analysis result caching
 - [ ] Batch processing
 
-### Phase 4: 🚀 Advanced UI
+### Phase 5: 🚀 Advanced UI
 - [ ] Dependency graph visualization
 - [ ] Interactive architecture diagram
 - [ ] Refactoring impact analysis
 - [ ] Team collaboration features
 
-### Phase 5: 🚀 Enterprise Features
+### Phase 6: 🚀 Enterprise Features
 - [ ] Multi-language support (Java, C#, Go, etc.)
 - [ ] Custom analysis rules
 - [ ] Integration with code review tools
