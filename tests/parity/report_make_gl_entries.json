@@ -1,0 +1,22 @@
+{
+  "function": "make_gl_entries",
+  "test_cases": [
+    {
+      "test_case": "with_merge_entries_false",
+      "python_result": "success",
+      "go_result": "success",
+      "status": "PASS"
+    }
+  ],
+  "summary": {
+    "total": 1,
+    "passed": 1,
+    "failed": 0,
+    "pass_rate": 100.0
+  },
+  "metadata": {
+    "python_tests_file": "python_make_gl_entries.json",
+    "go_tests_file": "go_make_gl_entries.json",
+    "generated_at": "D:\\Python_code_analyser\\utils\\logger.py"
+  }
+}

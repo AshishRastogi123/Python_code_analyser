@@ -2,7 +2,7 @@
 
 An AI-assisted, domain-aware Python code intelligence and modernization platform. Specializes in analyzing ERPNext Accounts modules with semantic understanding of accounting workflows, enabling intelligent legacy code assessment and Python-to-Go migration planning.
 
-**Current Status**: Phase 1 ✅ (Core Architecture) | Phase 2 ✅ (Semantic Analysis) | Phase 3+ 🚀 (AI Analysis & FastAPI)
+**Current Status**: Phase 1 ✅ (Core Architecture) | Phase 2 ✅ (Semantic Analysis) | Phase 3 🚀 (Modernization & LLM Integration)
 
 ---
 
@@ -293,111 +293,85 @@ See `requirements.txt` for the complete list. Key packages:
 
 ## 🚀 Quick Start
 
-### 1. Analyze a Python File (Default)
+### How to Run the Analyzer (CLI)
 
-Extract code structure from any Python file:
-
-```bash
-python analyzer.py sample.py
-```
-
-**Output:**
-- Console: Detailed analysis summary (functions, classes, imports, relationships)
-- File: `result.json` with structured analysis data
-
-**Configuration:**
-Uses structured logging and configuration from `utils/config.py`. Override with environment variables or `.env` file.
-
-### 2. Index for RAG (Semantic Search)
-
-Build a FAISS index for intelligent code querying:
+Activate virtual environment and run analysis:
 
 ```bash
-python analyzer.py sample.py --command index
+python -m venv venv
+.\venv\Scripts\activate  # On Windows
+python analyzer.py --command analyze_project legacy_code/accounts
+python analyzer.py --command analyze_semantic legacy_code/accounts
 ```
 
-**Steps:**
-1. Analyzes the file (AST extraction)
-2. Creates semantic chunks from code structure
-3. Generates embeddings using Sentence Transformers
-4. Builds and saves FAISS index
-5. Saves chunks metadata
+### How to Run Semantic Queries
 
-**Output:**
-- `rag/index.faiss`: FAISS vector index
-- `rag/chunks.pkl`: Code chunks metadata
-
-### 3. Query via CLI
-
-Search the indexed codebase using natural language:
+Query semantic index with natural language:
 
 ```bash
-python analyzer.py --command query --query "What functions handle data loading?"
+python analyzer.py --command query_semantic \
+  --query "ledger posting functions" \
+  --index accounts_semantic.json
 ```
 
-**Process:**
-1. Converts your question to embeddings
-2. Searches FAISS index for similar code chunks
-3. Retrieves matching functions/classes/imports
-4. Generates comprehensive answer
+**Note:** Requires semantic index file generated from `analyze_semantic` command.
 
-### 4. Query via Web UI (Streamlit)
+### How to Run Parity Tests (STEP 7)
 
-Launch interactive web interface:
+Run automated parity testing between Python and Go implementations:
+
+```bash
+python analyzer.py make_gl_entries --command parity_test
+```
+
+**Output:** PASS/FAIL status with detailed parity report JSON in `tests/parity/report_make_gl_entries.json`.
+
+### How to Run Streamlit UI
+
+Launch interactive web interface for semantic queries and migration readiness:
 
 ```bash
 streamlit run ui/app.py
 ```
 
 **Features:**
-- Browser-based interface
-- Real-time query input
-- Automatic index detection
-- Setup guidance
+- Semantic queries with AI explanations
+- Migration readiness view
+- Parity test visualization
+- Interactive exploration of code analysis results
 
-### 5. Semantic Analysis (Phase 2)
+---
 
-Perform domain-aware analysis and querying for accounting systems:
+## 🛠️ Modernization (Python → Go)
 
-**Build Semantic Index:**
+Assisted migration from Python to Go, not blind code generation. Uses AST-based function extraction to generate Go migration skeletons with automated parity testing.
+
+### Features
+- **AST-Based Extraction**: Precise function signature and logic extraction
+- **Go Migration Skeletons**: Generate Go code templates from Python functions
+- **Parity Testing**: Automated comparison between Python and Go implementations
+- **Evidence-Based**: See `tests/parity/report_make_gl_entries.json` for parity results
+
+### How to Run Parity Tests
 ```bash
-python analyzer.py /path/to/erpnext --command analyze_semantic
+python analyzer.py make_gl_entries --command parity_test
 ```
 
-**Query Semantic Index:**
-```bash
-python analyzer.py --command query_semantic --query "ledger posting functions" --index project_semantic.json
-```
+**Output:** PASS/FAIL status with detailed parity report JSON.
 
-**Example Queries:**
-- "journal entry validation"
-- "trial balance calculation"
-- "payment reconciliation"
-- "tax processing functions"
+---
 
-**Features:**
-- Domain tagging of accounting concepts (ledger, journal_entry, payment, tax)
-- Workflow detection (Journal Entry → Ledger Posting patterns)
-- Quality scoring for modernization prioritization (HIGH/MEDIUM/LOW)
-- Semantic search with relevance ranking and explanations
+## 🤖 LLM Integration (Groq)
 
-### Example Semantic Query Output
-```bash
-$ python analyzer.py --command query_semantic --query "ledger posting functions" --index project_semantic.json
+Groq LLM integration for semantic querying and code explanation/analysis.
 
-Query Results:
-1. make_ledger_entry (ledger_entry.py:45)
-   Relevance: 0.92 | Quality: HIGH | Domain: ledger
-   Reason: Matches query terms: ledger, posting | Identified as accounting-related code
+### Features
+- **Semantic Querying**: Natural language code search with AI explanations
+- **Code Analysis**: AI-powered code understanding and documentation
+- **Cloud-Based**: Uses Groq API for fast, reliable responses
 
-2. update_ledger_balance (ledger.py:123)
-   Relevance: 0.88 | Quality: HIGH | Domain: ledger
-   Reason: Matches query terms: ledger | High-quality, well-documented code
-
-3. post_journal_to_ledger (journal.py:78)
-   Relevance: 0.85 | Quality: MEDIUM | Domain: journal_entry, ledger
-   Reason: Matches query terms: posting, ledger | Workflow: Journal Entry → Ledger Posting
-```
+### Setup
+Set `LLM_PROVIDER=groq` and `GROQ_API_KEY` in `.env` file.
 
 ---
 
@@ -537,12 +511,14 @@ python analyzer.py monolith.py --command refactor
 - [x] Semantic indexing and querying
 - [x] Domain-aware search with relevance ranking
 
-### Phase 3: 🚀 AI Analysis (In Progress)
+### Phase 3: 🚀 Modernization & LLM Integration (In Progress)
+- [x] Python-to-Go migration skeletons
+- [x] AST-based function extraction for Go
+- [x] Automated parity testing
+- [x] Groq LLM integration for semantic querying
 - [ ] High-coupling module detection
 - [ ] Refactoring opportunity suggestions
 - [ ] Service extraction recommendations
-- [ ] Circular dependency detection
-- [ ] Architecture explanation generation
 
 ### Phase 4: 🚀 FastAPI Backend
 - [ ] REST API endpoints

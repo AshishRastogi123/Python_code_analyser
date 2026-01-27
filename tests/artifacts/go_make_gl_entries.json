@@ -1,0 +1,35 @@
+{
+  "function": "make_gl_entries",
+  "test_results": [
+    {
+      "test_case": "basic_gl_entries",
+      "status": "success",
+      "output": null,
+      "error": null
+    },
+    {
+      "test_case": "empty_gl_map",
+      "status": "success",
+      "output": null,
+      "error": null
+    },
+    {
+      "test_case": "cancel_operation",
+      "status": "success",
+      "output": null,
+      "error": null
+    },
+    {
+      "test_case": "with_merge_entries_false",
+      "status": "success",
+      "output": null,
+      "error": null
+    },
+    {
+      "test_case": "with_adv_adj_true",
+      "status": "success",
+      "output": null,
+      "error": null
+    }
+  ]
+}

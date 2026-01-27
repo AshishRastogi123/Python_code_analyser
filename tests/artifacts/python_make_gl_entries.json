@@ -1,0 +1,34 @@
+{
+  "function": "make_gl_entries",
+  "test_results": [
+    {
+      "test_case": "with_merge_entries_false",
+      "input": {
+        "gl_map": [
+          {
+            "account": "Test Account 1",
+            "debit": 100.0,
+            "credit": 0.0,
+            "posting_date": "2023-01-01",
+            "company": "Test Company",
+            "voucher_type": "Journal Entry",
+            "voucher_no": "JE-001"
+          },
+          {
+            "account": "Test Account 2",
+            "debit": 0.0,
+            "credit": 100.0,
+            "posting_date": "2023-01-01",
+            "company": "Test Company",
+            "voucher_type": "Journal Entry",
+            "voucher_no": "JE-001"
+          }
+        ],
+        "merge_entries": false
+      },
+      "output": null,
+      "status": "success",
+      "error": null
+    }
+  ]
+}

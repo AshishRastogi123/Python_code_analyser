@@ -1,0 +1,13 @@
+{
+  "project_name": "erpnext",
+  "file_analyses": [],
+  "all_relationships": [],
+  "errors": [],
+  "summary": {
+    "total_files": 0,
+    "total_entities": 0,
+    "total_functions": 0,
+    "total_classes": 0,
+    "total_relationships": 0
+  }
+}
