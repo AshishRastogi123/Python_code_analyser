@@ -26,12 +26,17 @@ from utils.config import Config
 # Import core analysis modules
 from core.ast_parser import SafeParser
 from core.models import EntityType
+from core.project_analyzer import analyze_project
 
-# Import RAG modules
-from rag.chunker import create_chunks
-from rag.embeddings import generate_embeddings, load_model
-from rag.faiss_index import build_and_save_index
-from rag.pipeline import rag_query
+# Import RAG modules (lazy loading to avoid dependency issues)
+def _import_rag_modules():
+    """Lazy import RAG modules to avoid dependency issues when not needed."""
+    global create_chunks, generate_embeddings, load_model, build_and_save_index, rag_query
+    if 'create_chunks' not in globals():
+        from rag.chunker import create_chunks
+        from rag.embeddings import generate_embeddings, load_model
+        from rag.faiss_index import build_and_save_index
+        from rag.pipeline import rag_query
 
 # Import legacy output modules (for backward compatibility)
 from output import save_json, print_summary
@@ -135,18 +140,21 @@ def query_codebase(query: str) -> None:
     Args:
         query: Natural language query about the codebase
     """
+    # Lazy import RAG modules
+    _import_rag_modules()
+
     logger.info(f"Processing query: {query}")
     print(f"\n✓ Starting query: '{query}'")
-    
+
     try:
         print(f"  → Retrieving relevant context...")
         answer = rag_query(query)
         logger.debug(f"RAG query returned answer of length {len(answer)}")
         print(f"  ✓ Query processed")
-        
+
         print(f"\nQuery: {query}")
         print(f"Answer: {answer}")
-    
+
     except Exception as e:
         logger.error(f"Query failed: {e}", exc_info=True)
         print(f"✗ Query failed: {e}")
@@ -209,8 +217,9 @@ def main():
     """
     Command-line interface for the Python Code Analyzer.
 
-    Supports three commands:
+    Supports four commands:
     - analyze: Extract code structure from a Python file
+    - analyze-project: Analyze entire Python project recursively
     - index: Build FAISS index for RAG queries
     - query: Query the indexed codebase using natural language
     """
@@ -224,7 +233,7 @@ def main():
     )
     parser.add_argument(
         "--command",
-        choices=["analyze", "index", "query"],
+        choices=["analyze", "analyze-project", "index", "query"],
         help="Command to run (default: analyze if file provided)"
     )
     parser.add_argument(
@@ -260,6 +269,21 @@ def main():
             print_summary(result)
             print("=" * 60)
         
+        elif args.command == "analyze-project":
+            logger.info(f"Running 'analyze-project' command on {args.file}")
+            print("=" * 60)
+            print("PYTHON PROJECT ANALYSIS REPORT")
+            print("=" * 60)
+            project_analysis = analyze_project(args.file)
+            print("\n✓ Project analysis complete!")
+            print(f"  → Total files analyzed: {len(project_analysis.file_analyses)}")
+            print(f"  → Total functions found: {len(project_analysis.all_functions)}")
+            print(f"  → Total classes found: {len(project_analysis.all_classes)}")
+            print(f"  → Total relationships: {len(project_analysis.all_relationships)}")
+            if project_analysis.errors:
+                print(f"  → Errors encountered: {len(project_analysis.errors)}")
+            print("=" * 60)
+
         elif args.command == "index":
             logger.info(f"Running 'index' command on {args.file}")
             index_file(args.file)
